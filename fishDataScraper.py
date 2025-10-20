@@ -14,34 +14,47 @@ def lake_finder(input_lake):
 
     for grid in grids:
         print("Checking lake...")
-        name = grid.find_next("h6", class_="job-cart__title").get_text(strip=True)
-        if name == input_lake:
-            print(f"Lake found: {name}")
-            return grid
-        
+        if grid.find_next("h6").get("class") == ["job-cart__title"]: 
+            name = grid.find_next("h6", class_="job-cart__title").get_text(strip=True) 
+            if name == input_lake:
+                link = grid.find("a")["href"]
+                extract_stocking_updates(link)
+                return
+        elif grid.find_next("h6").get("class") == ["database-card__title"]:
+            name = grid.find_next("h6", class_="database-card__title").get_text(strip=True) 
+            if name == input_lake:
+                link = grid.find("a")["href"]
+                extract_stocking_updates(link)
+                return
         
     print("Lake not found.")
     return None
 
-lake_finder(lake)
+
 
                     
 
 
     
+def extract_stocking_updates(url_of_page):
+    response = requests.get(url_of_page)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
 
+    header = soup.find("h4", class_= "tac", string = "Stocking Updates")
 
-header = soup.find("h4", class_= "tac", string = "Stocking Updates")
+    if header:
+        table = header.find_next("table")
 
-if header:
-    table = header.find_next("table")
-
-    if table:
-        rows = table.find_all("tr")
-        for row in rows:
-            cells = [cell.get_text(strip=True) for cell in row.find_all(["td", "th"])]
-            print(cells)
+        if table:
+            rows = table.find_all("tr")
+            for row in rows:
+                cells = [cell.get_text(strip=True) for cell in row.find_all(["td", "th"])]
+                print(cells)
+        else:
+            print("No table found after the 'Stocking Updates' header.")
     else:
-        print("No table found after the 'Stocking Updates' header.")
-else:
-    print("Header 'Stocking Updates' not found.")
+        print("Header 'Stocking Updates' not found.")
+
+
+lake_finder(lake)
