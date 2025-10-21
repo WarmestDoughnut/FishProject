@@ -9,11 +9,14 @@ soup = BeautifulSoup(response.text, 'html.parser')
 
 lake = input("Enter the lake name: ")
 
+
+## Find the lake based on user input sends call to extract stocking updates if found
 def lake_finder(input_lake):
     grids = soup.find_all("div", class_="grid__item")
 
     for grid in grids:
         print("Checking lake...")
+        ## Handles two different card styles on the page
         if grid.find_next("h6").get("class") == ["job-cart__title"]: 
             name = grid.find_next("h6", class_="job-cart__title").get_text(strip=True) 
             if name == input_lake:
@@ -31,11 +34,6 @@ def lake_finder(input_lake):
     return None
 
 
-
-                    
-
-
-    
 def extract_stocking_updates(url_of_page):
     response = requests.get(url_of_page)
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -57,4 +55,19 @@ def extract_stocking_updates(url_of_page):
         print("Header 'Stocking Updates' not found.")
 
 
-lake_finder(lake)
+def check_next_page(url_of_page):
+    response = requests.get(url_of_page)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    header = soup.find("li", class_ = "active")
+
+    if header:
+        link = header.find_next("a")["href"]
+        print(link)
+        return link
+    else:
+        print("No next page found.")
+        return None
+    
+check_next_page(nevada_stock_url)
+##lake_finder(lake)
+    
