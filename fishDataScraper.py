@@ -3,35 +3,41 @@ import requests
 
 nevada_stock_url = "https://www.ndow.org/get-outside/fishing/fishing-stocking-reports/database/?region=all&show_all=true"
 
-response = requests.get(nevada_stock_url)
+##response = requests.get(nevada_stock_url)
 
-soup = BeautifulSoup(response.text, 'html.parser')
+##soup = BeautifulSoup(response.text, 'html.parser')
 
 lake = input("Enter the lake name: ")
 
 
 ## Find the lake based on user input sends call to extract stocking updates if found
-def lake_finder(input_lake):
-    grids = soup.find_all("div", class_="grid__item")
+def lake_finder(input_lake, nevada_stock_url):
+    link_next = nevada_stock_url
+    while(True):
+        response = requests.get(link_next)
 
-    for grid in grids:
-        print("Checking lake...")
-        ## Handles two different card styles on the page
-        if grid.find_next("h6").get("class") == ["job-cart__title"]: 
-            name = grid.find_next("h6", class_="job-cart__title").get_text(strip=True) 
-            if name == input_lake:
-                link = grid.find("a")["href"]
-                extract_stocking_updates(link)
-                return
-        elif grid.find_next("h6").get("class") == ["database-card__title"]:
-            name = grid.find_next("h6", class_="database-card__title").get_text(strip=True) 
-            if name == input_lake:
-                link = grid.find("a")["href"]
-                extract_stocking_updates(link)
-                return
+        soup = BeautifulSoup(response.text, 'html.parser')
         
+        grids = soup.find_all("div", class_="grid__item")
+
+        for grid in grids:
+            print("Checking lake...")
+            ## Handles two different card styles on the page
+            if grid.find_next("h6").get("class") == ["job-cart__title"]: 
+                name = grid.find_next("h6", class_="job-cart__title").get_text(strip=True) 
+                if name == input_lake:
+                    link = grid.find("a")["href"]
+                    extract_stocking_updates(link)
+                    return 
+            elif grid.find_next("h6").get("class") == ["database-card__title"]:
+                name = grid.find_next("h6", class_="database-card__title").get_text(strip=True) 
+                if name == input_lake:
+                    link = grid.find("a")["href"]
+                    extract_stocking_updates(link)
+                    return 
+        link_next = check_next_page(link_next)
     print("Lake not found.")
-    return None
+    return False
 
 
 def extract_stocking_updates(url_of_page):
@@ -55,6 +61,7 @@ def extract_stocking_updates(url_of_page):
         print("Header 'Stocking Updates' not found.")
 
 
+## function to find next page link
 def check_next_page(url_of_page):
     response = requests.get(url_of_page)
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -68,6 +75,9 @@ def check_next_page(url_of_page):
         print("No next page found.")
         return None
     
-check_next_page(nevada_stock_url)
-##lake_finder(lake)
+
+lake_finder(lake, nevada_stock_url)
+
+
+
     
